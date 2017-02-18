@@ -1,0 +1,9 @@
+POST /enroll HTTP/1.1
+Content-Type: application/json
+app_id: f62afb61
+app_key: 6c53b4533d32d3773539951326ea7118
+{
+    "image":" http://media.kairos.com/kairos-elizabeth.jpg ",
+    "subject_id":"Elizabeth",
+    "gallery_name":"MyGallery"
+}
