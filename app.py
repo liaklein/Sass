@@ -8,7 +8,7 @@ def handle_command(command, channel, score):
         are valid commands. If so, then acts on the commands. If not,
         returns back what it needs for clarification.
     """
-    response = "Analyzing Photo at: " + command
+    response = "Analyzing Photo at: " + command + " in " + channel
     slack_client.api_call(
         "chat.postMessage", channel=channel, text=response, as_user=True)
 
@@ -32,8 +32,7 @@ def parse_slack_output(slack_rtm_output):
         for output in output_list:
             print(output['type'])
             if output:
-                if "message" in output["type"] and output[
-                        'subtype'] and "file_share" in output['subtype']:
+                if "message" in output["type"] and output.get("subtype", None) and "file_share" in output['subtype']:
                     return output['file']['id'], output['channel']
     return None, None
 
