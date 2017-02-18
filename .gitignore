@@ -1,2 +1,3 @@
 tmp
 .slack_bot_token
+*.pyc

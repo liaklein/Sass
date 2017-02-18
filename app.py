@@ -10,7 +10,6 @@ import cStringIO
 
 def get_pretty_user(user_id):
     info = slacker_client.users.info(user_id)
-    print info.body['user']
     return info.body['user']['name']
 
 def handle_command(parsed, score):
@@ -24,7 +23,6 @@ def handle_command(parsed, score):
         response = "Congratulations: user " + get_pretty_user(parsed['user']) + " is enrolled!"
     if 'kill' in parsed['type']:
         handle_kill(score, parsed['image'], get_pretty_user(parsed['user']), parsed['channel'])
-        response = "User: " + get_pretty_user(parsed['user']) + " attemptd to kill someone!"
     if 'score' in parsed['type']:
         response = "Score is yet to be implemented"
         # handle_score(score, parsed['channel'])
@@ -80,7 +78,7 @@ def handle_kill(score, image, sender, channel):
         slack_client.api_call(
             "chat.postMessage",
             channel=channel,
-            text = player,
+            text = get_pretty_user(player),
             # text=player + " : " + score[player],
             as_user=True)
     return score
