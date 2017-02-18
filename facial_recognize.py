@@ -3,16 +3,17 @@ import requests
 import json
 #from requests_oauthlib import OAuth1
 enroll_url = "https://api.kairos.com/enroll"
-recognize_url= "https://api.kairos.com/recognize"
+recognize_url = "https://api.kairos.com/recognize"
 headers = {
     'Content-Type': 'application/json',
     'app_id': 'f62afb61',
     'app_key': '6c53b4533d32d3773539951326ea7118'
 }
 
-def enroll_player(image,player):
+
+def enroll_player(image, player):
     #make your json
-    json_info = {"gallery_name" : "MyGallery"}
+    json_info = {"gallery_name": "MyGallery"}
     json_info["image"] = image
     json_info["subject_id"] = player
 
@@ -20,11 +21,12 @@ def enroll_player(image,player):
     r = requests.post(enroll_url, json=json_info, headers=headers)
     #do something with r.status_code?
 
+
 def get_players_from_image(image):
     #right now just assume that there is one face per image
     #we will hook up to mathematica later if we have time
     #make your json
-    json_info = {"threshold" : "0.63", "gallery_name" : "MyGallery"}
+    json_info = {"threshold": "0.63", "gallery_name": "MyGallery"}
     json_info["image"] = image
 
     #send the request
@@ -34,6 +36,7 @@ def get_players_from_image(image):
         return []
     response = r.json()
     #the below line is most likely wrong lol
+    print(response)
     player = response["images"][0]["candidates"][0]["subject_id"]
     return [player]
 
