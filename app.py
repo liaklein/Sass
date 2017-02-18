@@ -38,7 +38,8 @@ def handle_score(
     slack_client.api_call(
         "chat.postMessage",
         channel=channel,
-        text="Score\n" + str(sorted(score)),
+        text="Score\n",
+        # + str(sorted(score)),
         as_user=True)  #we will make it look nicer later
 
 
@@ -56,7 +57,8 @@ def handle_kill(score, image, sender, channel):
     slack_client.api_call(
         "chat.postMessage",
         channel=channel,
-        text="Scored a point!\n" + sender + " : " + score[sender],
+        text="Scored a point!\n" + sender,
+        # + " : " + score[sender],
         as_user=True)
     slack_client.api_call(
         "chat.postMessage",
@@ -64,7 +66,7 @@ def handle_kill(score, image, sender, channel):
         text="Lost a point!\n",
         as_user=True)
     for player in players:  #decrement each player's score who got caught
-        score[player] -= 1
+        # score[player] -= 1
         slack_client.api_call(
             "chat.postMessage",
             channel=channel,
