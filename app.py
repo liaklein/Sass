@@ -2,7 +2,6 @@ import os
 import time
 from slackclient import SlackClient
 
-
 # starterbot's ID as an environment variable
 BOT_ID = os.environ.get("BOT_ID")
 
@@ -21,8 +20,8 @@ def handle_command(command, channel):
         returns back what it needs for clarification.
     """
     response = "Analyzing Photo at: " + command
-    slack_client.api_call("chat.postMessage", channel=channel,
-                          text=response, as_user=True)
+    slack_client.api_call(
+        "chat.postMessage", channel=channel, text=response, as_user=True)
 
 
 def parse_slack_output(slack_rtm_output):
@@ -36,13 +35,14 @@ def parse_slack_output(slack_rtm_output):
         for output in output_list:
             print(output['type'])
             if output:
-                if "message" in output["type"] and "file_share" in output['subtype']:
+                if "message" in output["type"] and "file_share" in output[
+                        'subtype']:
                     return output['file']['id'], output['channel']
     return None, None
 
 
 if __name__ == "__main__":
-    READ_WEBSOCKET_DELAY = 1 # 1 second delay between reading from firehose
+    READ_WEBSOCKET_DELAY = 1  # 1 second delay between reading from firehose
     if slack_client.rtm_connect():
         print("StarterBot connected and running!")
         while True:
