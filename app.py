@@ -1,10 +1,12 @@
 import os
+import base64
 import time
 import facial_recognize as fr
 from slackclient import SlackClient
 from slacker import Slacker
+import requests
+import cStringIO
 # from Pillow import Image
-import urllib, cStringIO
 
 
 def handle_command(parsed, score):
@@ -13,8 +15,15 @@ def handle_command(parsed, score):
         are valid commands. If so, then acts on the commands. If not,
         returns back what it needs for clarification.
     """
-    response = "Analyzing Photo from: " + parsed['user'] + " in " + parsed[
-        'channel']
+    if 'enroll' in parsed['type']:
+        handle_registration(score, parsed['image'], parsed['user'])
+        response = "Congratulations: user " + parsed['user'] + " is enrolled!"
+    if 'kill' in parsed['type']:
+        handle_kill(score, parsed['image'], parsed['user'], parsed['channel'])
+        response = "User: " + parsed['user'] + " attempted to kill someone!"
+    if 'score' in parsed['type']:
+        response = "Score is yet to be implemented"
+        # handle_score(score, parsed['channel'])
     slack_client.api_call(
         "chat.postMessage",
         channel=parsed['channel'],
@@ -24,7 +33,7 @@ def handle_command(parsed, score):
 
 def handle_score(
         score, channel,
-        command):  #this gets called when a user wants to see the score
+        ):  #this gets called when a user wants to see the score
     #doesn't edit score, so doesn't need to return it
     slack_client.api_call(
         "chat.postMessage",
@@ -75,18 +84,32 @@ def parse_slack_output(slack_rtm_output):
         for output in output_list:
             print(output['type'])
             if output:
-                if "message" in output["type"] and output.get(
-                        "subtype", None) and "file_share" in output['subtype']:
-                    f = output['file']
-                    image_file = cStringIO.StringIO(
-                        urllib.urlopen(f['url_private_download'])
-                        .read()).read()
-                    image_64 = image_file.encode("base64")
-                    return {
-                        'image': image_64,
-                        'channel': output['channel'],
-                        'user': output['user']
-                    }
+                if "message" in output['type']:
+                    if output.get("subtype",
+                                  None) and "file_share" in output['subtype']:
+                        f = output['file']
+                        headers = {'Authorization': 'Bearer ' + SLACK_BOT_TOKEN}
+                        image_file = cStringIO.StringIO(
+                            requests.get(f['url_private_download'], headers=headers).content
+                            ).read()
+                        print output
+                        if 'enroll' in output['file'].get('initial_comment', {'comment' : ''})['comment']:
+                            ty = 'enroll'
+                        else:
+                            ty = 'kill'
+                        image_64 = base64.b64encode(image_file).decode('ascii')
+                        return {
+                            'image': str(image_64),
+                            'channel': output['channel'],
+                            'user': output['user'],
+                            'type': ty
+                        }
+                    elif output.get('text', None) and "!score" in output['text']:
+                        return {
+                            'type': 'score',
+                            'channel': output['channel'],
+                            'user': output['user']
+                        }
     return None
 
 
@@ -119,7 +142,7 @@ if __name__ == "__main__":
             while True:
                 parsed = parse_slack_output(slack_client.rtm_read())
                 if parsed:
-                    handle_command(parsed, score)
+                    score = handle_command(parsed, score)
                     time.sleep(READ_WEBSOCKET_DELAY)
         else:
             print("Connection failed. Invalid Slack token or bot ID?")
