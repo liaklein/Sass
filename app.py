@@ -12,14 +12,28 @@ def handle_command(command, channel, score):
     slack_client.api_call(
         "chat.postMessage", channel=channel, text=response, as_user=True)
 
-def handle_score():
-    pass
+def handle_score(score,channel,command): #this gets called when a user wants to see the score
+    #doesn't edit score, so doesn't need to return it
+    slack_client.api_call(
+        "chat.postMessage", channel=channel, text="Score\n" + str(sorted(score)), as_user=True) #we will make it look nicer later
 
-def handle_registration():
-    pass
+def handle_registration(score, image, sender):
+    enroll_player(image,sender)#need to register in gallery
+    score[sender] = 0 #when you register your score gets initialized to zero
+    return score
 
-def handle_kill():
-    pass
+def handle_kill(score, image, sender, channel):
+    players = get_players_from_image(image) #get all of the registered players who are in the photo
+    score[sender] = score[sender] + len(players) #increment the sender's score by how many people they got
+    slack_client.api_call(
+        "chat.postMessage", channel=channel, text="Scored a point!\n" + sender + " : " + score[sender], as_user=True)
+    slack_client.api_call(
+        "chat.postMessage", channel=channel, text="Lost a point!\n", as_user=True)
+    for player in players: #decrement each player's score who got caught
+        score[player] -= 1
+        slack_client.api_call(
+            "chat.postMessage", channel=channel, text=player + " : " + score[player], as_user=True)
+    return score
 
 def parse_slack_output(slack_rtm_output):
     """
