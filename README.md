@@ -4,3 +4,4 @@ FB assassin bot
 Jacob Bisnett
 Gayeon Lee
 Grace Heard
+Lia Klein
