@@ -2,17 +2,6 @@ import os
 import time
 from slackclient import SlackClient
 
-# starterbot's ID as an environment variable
-BOT_ID = os.environ.get("BOT_ID")
-
-# constants
-AT_BOT = "<@" + BOT_ID + ">"
-EXAMPLE_COMMAND = "do"
-
-# instantiate Slack & Twilio clients
-slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))
-
-
 def handle_command(command, channel, score):
     """
         Receives commands directed at the bot and determines if they
@@ -43,21 +32,43 @@ def parse_slack_output(slack_rtm_output):
         for output in output_list:
             print(output['type'])
             if output:
-                if "message" in output["type"] and "file_share" in output[
-                        'subtype']:
+                if "message" in output["type"] and output[
+                        'subtype'] and "file_share" in output['subtype']:
                     return output['file']['id'], output['channel']
     return None, None
 
 
 if __name__ == "__main__":
     score = {} #score board starts out at empty dictionary
-    READ_WEBSOCKET_DELAY = 1  # 1 second delay between reading from firehose
-    if slack_client.rtm_connect():
-        print("StarterBot connected and running!")
-        while True:
-            command, channel = parse_slack_output(slack_client.rtm_read())
-            if command and channel:
-                handle_command(command, channel, score)
-            time.sleep(READ_WEBSOCKET_DELAY)
+    with open('.slack_bot_token') as f:
+        SLACK_BOT_TOKEN = f.readline().strip()
+    BOT_NAME = 'sassbot'
+    slack_client = SlackClient(SLACK_BOT_TOKEN)
+    api_call = slack_client.api_call("users.list")
+    if api_call.get('ok'):
+        users = api_call.get('members')
+        for user in users:
+            if 'name' in user and user.get('name') == BOT_NAME:
+                BOT_ID = user.get('id')
     else:
-        print("Connection failed. Invalid Slack token or bot ID?")
+        print("could not find bot user with the name " + BOT_NAME)
+        exit()
+
+    if BOT_ID:
+        AT_BOT = "<@" + BOT_ID + ">"
+        EXAMPLE_COMMAND = "do"
+
+        slack_client = SlackClient(SLACK_BOT_TOKEN)
+
+        READ_WEBSOCKET_DELAY = 1
+        if slack_client.rtm_connect():
+            print("StarterBot connected and running!")
+            while True:
+                command, channel = parse_slack_output(slack_client.rtm_read())
+                if command and channel:
+                    handle_command(command, channel, score)
+                    time.sleep(READ_WEBSOCKET_DELAY)
+        else:
+            print("Connection failed. Invalid Slack token or bot ID?")
+    else:
+        print('Cannot get BOT_ID')
