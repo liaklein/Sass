@@ -8,6 +8,10 @@ import requests
 import cStringIO
 # from Pillow import Image
 
+def get_pretty_user(user_id):
+    info = slacker_client.users.info(user_id)
+    print info.body['user']
+    return info.body['user']['name']
 
 def handle_command(parsed, score):
     """
@@ -17,10 +21,10 @@ def handle_command(parsed, score):
     """
     if 'enroll' in parsed['type']:
         handle_registration(score, parsed['image'], parsed['user'])
-        response = "Congratulations: user " + parsed['user'] + " is enrolled!"
+        response = "Congratulations: user " + get_pretty_user(parsed['user']) + " is enrolled!"
     if 'kill' in parsed['type']:
-        handle_kill(score, parsed['image'], parsed['user'], parsed['channel'])
-        response = "User: " + parsed['user'] + " attempted to kill someone!"
+        handle_kill(score, parsed['image'], get_pretty_user(parsed['user']), parsed['channel'])
+        response = "User: " + get_pretty_user(parsed['user']) + " attemptd to kill someone!"
     if 'score' in parsed['type']:
         response = "Score is yet to be implemented"
         # handle_score(score, parsed['channel'])
@@ -29,7 +33,6 @@ def handle_command(parsed, score):
         channel=parsed['channel'],
         text=response,
         as_user=True)
-
 
 def handle_score(
         score, channel,
@@ -41,7 +44,6 @@ def handle_score(
         text="Score\n",
         # + str(sorted(score)),
         as_user=True)  #we will make it look nicer later
-
 
 def handle_registration(score, image, sender):
     fr.enroll_player(image, sender)  #need to register in gallery
