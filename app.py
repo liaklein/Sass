@@ -51,7 +51,15 @@ def handle_registration(score, image, sender):
 
 def handle_kill(score, image, sender, channel):
     #get all of the registered players who are in the photo
-    players = fr.get_players_from_image(image)
+    error, players = fr.get_players_from_image(image)
+    if error == "ERROR":
+        print("did not detect player in picture")
+        slack_client.api_call(
+            "chat.postMessage",
+            channel=parsed['channel'],
+            text="did not detect player in picture",
+            as_user=True)
+        return score
     #increment the sender's score by how many people they got
     # score[sender] = score[sender] + len(players)
     slack_client.api_call(

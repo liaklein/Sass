@@ -32,13 +32,13 @@ def get_players_from_image(image):
     #send the request
     r = requests.post(recognize_url, json=json_info, headers=headers)
     #error code 5051 if image not in gallery -- we think. will confirm later
-    if r.status_code == 5051:
-        return []
     response = r.json()
+    if "Errors" in response:
+        print("there was an error")
+        return ("ERROR",[])
     #the below line is most likely wrong lol
-    print(response)
     player = response["images"][0]["candidates"][0]["subject_id"]
-    return [player]
+    return ("OK",[player])
 
 
 #print(r.status_code, r.reason)
