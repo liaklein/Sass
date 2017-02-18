@@ -1,5 +1,6 @@
 import os
 import time
+import facial_recognize as fr
 from slackclient import SlackClient
 
 def handle_command(command, channel, score):
@@ -18,12 +19,12 @@ def handle_score(score,channel,command): #this gets called when a user wants to 
         "chat.postMessage", channel=channel, text="Score\n" + str(sorted(score)), as_user=True) #we will make it look nicer later
 
 def handle_registration(score, image, sender):
-    enroll_player(image,sender)#need to register in gallery
+    fr.enroll_player(image,sender)#need to register in gallery
     score[sender] = 0 #when you register your score gets initialized to zero
     return score
 
 def handle_kill(score, image, sender, channel):
-    players = get_players_from_image(image) #get all of the registered players who are in the photo
+    players = fr.get_players_from_image(image) #get all of the registered players who are in the photo
     score[sender] = score[sender] + len(players) #increment the sender's score by how many people they got
     slack_client.api_call(
         "chat.postMessage", channel=channel, text="Scored a point!\n" + sender + " : " + score[sender], as_user=True)
