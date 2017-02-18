@@ -33,7 +33,7 @@ def parse_slack_output(slack_rtm_output):
             print(output['type'])
             if output:
                 if "message" in output["type"] and output.get("subtype", None) and "file_share" in output['subtype']:
-                    return output['file']['id'], output['channel']
+                    return output['file']['permalink_public'], output['channel']
     return None, None
 
 
