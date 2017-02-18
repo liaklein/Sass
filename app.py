@@ -1,9 +1,11 @@
 import os
 import time
+import facial_recognize as fr
 from slackclient import SlackClient
 from slacker import Slacker
 # from Pillow import Image
 import urllib, cStringIO
+
 
 def handle_command(parsed, score):
     """
@@ -11,9 +13,13 @@ def handle_command(parsed, score):
         are valid commands. If so, then acts on the commands. If not,
         returns back what it needs for clarification.
     """
-    response = "Analyzing Photo from: " + parsed['user'] + " in " + parsed['channel']
+    response = "Analyzing Photo from: " + parsed['user'] + " in " + parsed[
+        'channel']
     slack_client.api_call(
-        "chat.postMessage", channel=parsed['channel'], text=response, as_user=True)
+        "chat.postMessage",
+        channel=parsed['channel'],
+        text=response,
+        as_user=True)
 
 
 def handle_score(
@@ -28,14 +34,14 @@ def handle_score(
 
 
 def handle_registration(score, image, sender):
-    enroll_player(image, sender)  #need to register in gallery
+    fr.enroll_player(image, sender)  #need to register in gallery
     score[sender] = 0  #when you register your score gets initialized to zero
     return score
 
 
 def handle_kill(score, image, sender, channel):
     #get all of the registered players who are in the photo
-    players = get_players_from_image(image)
+    players = fr.get_players_from_image(image)
     #increment the sender's score by how many people they got
     score[sender] = score[sender] + len(players)
     slack_client.api_call(
@@ -72,9 +78,15 @@ def parse_slack_output(slack_rtm_output):
                 if "message" in output["type"] and output.get(
                         "subtype", None) and "file_share" in output['subtype']:
                     f = output['file']
-                    image_file = cStringIO.StringIO(urllib.urlopen(f['url_private_download']).read()).read()
+                    image_file = cStringIO.StringIO(
+                        urllib.urlopen(f['url_private_download'])
+                        .read()).read()
                     image_64 = image_file.encode("base64")
-                    return {'image': image_64, 'channel' : output['channel'], 'user': output['user']}
+                    return {
+                        'image': image_64,
+                        'channel': output['channel'],
+                        'user': output['user']
+                    }
     return None
 
 
