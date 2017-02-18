@@ -2,6 +2,7 @@ import os
 import time
 from slackclient import SlackClient
 
+
 # starterbot's ID as an environment variable
 def handle_command(command, channel):
     """
@@ -25,16 +26,16 @@ def parse_slack_output(slack_rtm_output):
         for output in output_list:
             print(output['type'])
             if output:
-                if "message" in output["type"] and output['subtype'] and "file_share" in output[
-                        'subtype']:
+                if "message" in output["type"] and output[
+                        'subtype'] and "file_share" in output['subtype']:
                     return output['file']['id'], output['channel']
     return None, None
 
 
 if __name__ == "__main__":
     with open('.slack_bot_token') as f:
-        SLACK_BOT_TOKEN=f.readline().strip()
-    BOT_NAME='sassbot'
+        SLACK_BOT_TOKEN = f.readline().strip()
+    BOT_NAME = 'sassbot'
     slack_client = SlackClient(SLACK_BOT_TOKEN)
     api_call = slack_client.api_call("users.list")
     if api_call.get('ok'):
@@ -52,7 +53,7 @@ if __name__ == "__main__":
 
         slack_client = SlackClient(SLACK_BOT_TOKEN)
 
-        READ_WEBSOCKET_DELAY = 1  # 1 second delay between reading from firehose
+        READ_WEBSOCKET_DELAY = 1
         if slack_client.rtm_connect():
             print("StarterBot connected and running!")
             while True:
