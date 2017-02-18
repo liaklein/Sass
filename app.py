@@ -1,17 +1,19 @@
 import os
 import time
 from slackclient import SlackClient
+from slacker import Slacker
+# from Pillow import Image
+import urllib, cStringIO
 
-
-def handle_command(command, channel, score):
+def handle_command(parsed, score):
     """
         Receives commands directed at the bot and determines if they
         are valid commands. If so, then acts on the commands. If not,
         returns back what it needs for clarification.
     """
-    response = "Analyzing Photo at: " + command + " in " + channel
+    response = "Analyzing Photo from: " + parsed['user'] + " in " + parsed['channel']
     slack_client.api_call(
-        "chat.postMessage", channel=channel, text=response, as_user=True)
+        "chat.postMessage", channel=parsed['channel'], text=response, as_user=True)
 
 
 def handle_score(
@@ -32,10 +34,10 @@ def handle_registration(score, image, sender):
 
 
 def handle_kill(score, image, sender, channel):
-    players = get_players_from_image(
-        image)  #get all of the registered players who are in the photo
-    score[sender] = score[sender] + len(
-        players)  #increment the sender's score by how many people they got
+    #get all of the registered players who are in the photo
+    players = get_players_from_image(image)
+    #increment the sender's score by how many people they got
+    score[sender] = score[sender] + len(players)
     slack_client.api_call(
         "chat.postMessage",
         channel=channel,
@@ -69,9 +71,11 @@ def parse_slack_output(slack_rtm_output):
             if output:
                 if "message" in output["type"] and output.get(
                         "subtype", None) and "file_share" in output['subtype']:
-                    return output['file']['permalink_public'], output[
-                        'channel']
-    return None, None
+                    f = output['file']
+                    image_file = cStringIO.StringIO(urllib.urlopen(f['url_private_download']).read()).read()
+                    image_64 = image_file.encode("base64")
+                    return {'image': image_64, 'channel' : output['channel'], 'user': output['user']}
+    return None
 
 
 if __name__ == "__main__":
@@ -80,6 +84,7 @@ if __name__ == "__main__":
         SLACK_BOT_TOKEN = f.readline().strip()
     BOT_NAME = 'sassbot'
     slack_client = SlackClient(SLACK_BOT_TOKEN)
+    slacker_client = Slacker(SLACK_BOT_TOKEN)
     api_call = slack_client.api_call("users.list")
     if api_call.get('ok'):
         users = api_call.get('members')
@@ -100,9 +105,9 @@ if __name__ == "__main__":
         if slack_client.rtm_connect():
             print("StarterBot connected and running!")
             while True:
-                command, channel = parse_slack_output(slack_client.rtm_read())
-                if command and channel:
-                    handle_command(command, channel, score)
+                parsed = parse_slack_output(slack_client.rtm_read())
+                if parsed:
+                    handle_command(parsed, score)
                     time.sleep(READ_WEBSOCKET_DELAY)
         else:
             print("Connection failed. Invalid Slack token or bot ID?")
