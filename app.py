@@ -44,7 +44,7 @@ def handle_score(
 
 def handle_registration(score, image, sender):
     fr.enroll_player(image, sender)  #need to register in gallery
-    score[sender] = 0  #when you register your score gets initialized to zero
+    # score[sender] = 0  #when you register your score gets initialized to zero
     return score
 
 
@@ -52,7 +52,7 @@ def handle_kill(score, image, sender, channel):
     #get all of the registered players who are in the photo
     players = fr.get_players_from_image(image)
     #increment the sender's score by how many people they got
-    score[sender] = score[sender] + len(players)
+    # score[sender] = score[sender] + len(players)
     slack_client.api_call(
         "chat.postMessage",
         channel=channel,
@@ -68,7 +68,8 @@ def handle_kill(score, image, sender, channel):
         slack_client.api_call(
             "chat.postMessage",
             channel=channel,
-            text=player + " : " + score[player],
+            text = player,
+            # text=player + " : " + score[player],
             as_user=True)
     return score
 
