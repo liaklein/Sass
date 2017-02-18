@@ -9,7 +9,9 @@ import cStringIO
 # from Pillow import Image
 
 def get_pretty_user(user_id):
-    return slacker_client.users.info(user_id)['id']
+    info = slacker_client.users.info(user_id)
+    print info.body['user']
+    return info.body['user']['name']
 
 def handle_command(parsed, score):
     """
