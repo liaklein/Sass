@@ -13,7 +13,7 @@ EXAMPLE_COMMAND = "do"
 slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))
 
 
-def handle_command(command, channel):
+def handle_command(command, channel, score):
     """
         Receives commands directed at the bot and determines if they
         are valid commands. If so, then acts on the commands. If not,
@@ -23,6 +23,14 @@ def handle_command(command, channel):
     slack_client.api_call(
         "chat.postMessage", channel=channel, text=response, as_user=True)
 
+def handle_score():
+    pass
+
+def handle_registration():
+    pass
+
+def handle_kill():
+    pass
 
 def parse_slack_output(slack_rtm_output):
     """
@@ -42,13 +50,14 @@ def parse_slack_output(slack_rtm_output):
 
 
 if __name__ == "__main__":
+    score = {} #score board starts out at empty dictionary
     READ_WEBSOCKET_DELAY = 1  # 1 second delay between reading from firehose
     if slack_client.rtm_connect():
         print("StarterBot connected and running!")
         while True:
             command, channel = parse_slack_output(slack_client.rtm_read())
             if command and channel:
-                handle_command(command, channel)
+                handle_command(command, channel, score)
             time.sleep(READ_WEBSOCKET_DELAY)
     else:
         print("Connection failed. Invalid Slack token or bot ID?")
