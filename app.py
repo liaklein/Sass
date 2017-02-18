@@ -3,6 +3,7 @@ import time
 import facial_recognize as fr
 from slackclient import SlackClient
 
+
 def handle_command(command, channel, score):
     """
         Receives commands directed at the bot and determines if they
@@ -13,28 +14,45 @@ def handle_command(command, channel, score):
     slack_client.api_call(
         "chat.postMessage", channel=channel, text=response, as_user=True)
 
-def handle_score(score,channel,command): #this gets called when a user wants to see the score
+def handle_score(
+        score, channel,
+        command):  #this gets called when a user wants to see the score
     #doesn't edit score, so doesn't need to return it
     slack_client.api_call(
-        "chat.postMessage", channel=channel, text="Score\n" + str(sorted(score)), as_user=True) #we will make it look nicer later
+        "chat.postMessage",
+        channel=channel,
+        text="Score\n" + str(sorted(score)),
+        as_user=True)  #we will make it look nicer later
+
 
 def handle_registration(score, image, sender):
     fr.enroll_player(image,sender)#need to register in gallery
     score[sender] = 0 #when you register your score gets initialized to zero
     return score
 
+
 def handle_kill(score, image, sender, channel):
     players = fr.get_players_from_image(image) #get all of the registered players who are in the photo
     score[sender] = score[sender] + len(players) #increment the sender's score by how many people they got
     slack_client.api_call(
-        "chat.postMessage", channel=channel, text="Scored a point!\n" + sender + " : " + score[sender], as_user=True)
+        "chat.postMessage",
+        channel=channel,
+        text="Scored a point!\n" + sender + " : " + score[sender],
+        as_user=True)
     slack_client.api_call(
-        "chat.postMessage", channel=channel, text="Lost a point!\n", as_user=True)
-    for player in players: #decrement each player's score who got caught
+        "chat.postMessage",
+        channel=channel,
+        text="Lost a point!\n",
+        as_user=True)
+    for player in players:  #decrement each player's score who got caught
         score[player] -= 1
         slack_client.api_call(
-            "chat.postMessage", channel=channel, text=player + " : " + score[player], as_user=True)
+            "chat.postMessage",
+            channel=channel,
+            text=player + " : " + score[player],
+            as_user=True)
     return score
+
 
 def parse_slack_output(slack_rtm_output):
     """
@@ -47,13 +65,15 @@ def parse_slack_output(slack_rtm_output):
         for output in output_list:
             print(output['type'])
             if output:
-                if "message" in output["type"] and output.get("subtype", None) and "file_share" in output['subtype']:
-                    return output['file']['id'], output['channel']
+                if "message" in output["type"] and output.get(
+                        "subtype", None) and "file_share" in output['subtype']:
+                    return output['file']['permalink_public'], output[
+                        'channel']
     return None, None
 
 
 if __name__ == "__main__":
-    score = {} #score board starts out at empty dictionary
+    score = {}  #score board starts out at empty dictionary
     with open('.slack_bot_token') as f:
         SLACK_BOT_TOKEN = f.readline().strip()
     BOT_NAME = 'sassbot'
