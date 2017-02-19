@@ -70,6 +70,7 @@ def handle_kill(image, sender, channel):
             as_user=True)
         return
     #increment the sender's score by how many people they got
+    print score
     score[sender] = score[sender] + len(players)
     if len(players) > 0:
         slack_client.api_call(
@@ -114,15 +115,15 @@ def parse_slack_output(slack_rtm_output):
                                   None) and "file_share" in output['subtype']:
                         f = output['file']
                         headers = {'Authorization': 'Bearer ' + SLACK_BOT_TOKEN}
-                        image_file = cStringIO.StringIO(
-                            requests.get(f['url_private_download'], headers=headers).content
-                            ).read()
+                        file_name = ".tmp-image-file"
+                        with open(file_name, "wb+") as fil:
+                            fil.write(requests.get(f['url_private_download'], headers=headers).content)
                         if 'enroll' in output['file'].get('initial_comment', {'comment' : ''})['comment']:
                             ty = 'enroll'
                         else:
                             ty = 'kill'
                         return {
-                            'image': str(image_file), #passing the image file, turning to base64 later
+                            'image': file_name,
                             'channel': output['channel'],
                             'user': output['user'],
                             'type': ty

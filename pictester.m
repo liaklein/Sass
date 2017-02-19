@@ -1,10 +1,6 @@
-image  = ToExpression[$ScriptCommandLine[[2]]];
-
-stmp = OpenWrite["tmp.txt"]
-Write[stmp,a,b,c]
-
+#!/usr/local/bin/wolframscript
 dir = CreateDirectory["tempdir"]
-i = Import[image];
+i = Import[".tmp-image-file"];
 faces = FindFaces[i];
 display = ImageTrim[i,#]&/@faces
 SetDirectory["tempdir"]

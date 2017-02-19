@@ -53,7 +53,7 @@ def get_player_from_image(image):
     #error code 5051 if image not in gallery -- we think. will confirm later
     response = r.json()
     if "Errors" in response:
-        print("there was an error")
+        print(response)
         return ("ERROR",[])
     players = []
     for image in response.get('images', []):
