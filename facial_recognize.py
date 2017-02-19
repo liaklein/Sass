@@ -1,6 +1,7 @@
 from __future__ import print_function
 import requests
 import json
+import subprocess as sp
 #from requests_oauthlib import OAuth1
 enroll_url = "https://api.kairos.com/enroll"
 recognize_url = "https://api.kairos.com/recognize"
@@ -28,6 +29,8 @@ def get_players_from_image(image_list):
         player = get_player_from_image(image)
         if player not == "ERROR":
             players.append(player)
+    #delete temp folder for pics that we made in yoyo
+    sp.call(['rm','-r','tempdir'])
     if len(players) == 0:
         return ("ERROR",[])
     else:
