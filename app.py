@@ -7,6 +7,7 @@ from slackclient import SlackClient
 from slacker import Slacker
 import requests
 import cStringIO
+import operator
 # from Pillow import Image
 
 def get_pretty_user(user_id):
@@ -41,11 +42,18 @@ def handle_score(
         channel,
         ):  #this gets called when a user wants to see the score
     #doesn't edit score, so doesn't need to return it
+
+    sorted_score = sorted(score.items(), key=operator.itemgetter(1))
+    strscore = ""
+
+    for x in sorted_score:
+        strscore = strscore + get_pretty_user(x[0]) + ": " + str(x[1]) + "\n"
+
     slack_client.api_call(
         "chat.postMessage",
         channel=channel,
         text="Score\n"
-         + str(sorted(score)),
+         + strscore,
         as_user=True)  #we will make it look nicer later
 
 def handle_registration(image_file, sender):
