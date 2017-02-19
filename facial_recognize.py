@@ -1,6 +1,7 @@
 from __future__ import print_function
 import requests
 import json
+import subprocess as sp
 #from requests_oauthlib import OAuth1
 enroll_url = "https://api.kairos.com/enroll"
 recognize_url = "https://api.kairos.com/recognize"
@@ -27,7 +28,20 @@ def enroll_player(image, player):
     return response
 
 
-def get_players_from_image(image):
+def get_players_from_image(image_list):
+    players = []
+    for image in image_list:
+        player = get_player_from_image(image)
+        if player not == "ERROR":
+            players.append(player)
+    #delete temp folder for pics that we made in yoyo
+    sp.call(['rm','-r','tempdir'])
+    if len(players) == 0:
+        return ("ERROR",[])
+    else:
+        return("OK",players)
+
+def get_player_from_image(image):
     #right now just assume that there is one face per image
     #we will hook up to mathematica later if we have time
     #make your json
@@ -47,6 +61,3 @@ def get_players_from_image(image):
             players.append(candidate['subject_id'])
     return ("OK", players)
 
-
-#print(r.status_code, r.reason)
-#print(r.text[:500])
