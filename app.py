@@ -21,8 +21,8 @@ def handle_command(parsed):
         returns back what it needs for clarification.
     """
     if 'kill' in parsed['type']:
-        handle_kill(parsed['image'], get_pretty_user(parsed['user']), parsed['channel'])
-        return;
+        handle_kill(parsed['image'], parsed['user'], parsed['channel'])
+        return
     if 'enroll' in parsed['type']:
         result = handle_registration(parsed['image'], parsed['user'])['result']
         if result.get('error'):
@@ -32,6 +32,7 @@ def handle_command(parsed):
     if 'score' in parsed['type']:
         response = "Score is yet to be implemented"
         handle_score(parsed['channel'])
+        return
     slack_client.api_call(
         "chat.postMessage",
         channel=parsed['channel'],
@@ -64,10 +65,19 @@ def handle_registration(image_file, sender):
 
 def handle_kill(image, sender, channel):
     #get all of the registered players who are in the photo
+    # if not score.get(sender, False):
+    #     slack_client.api_call(
+    #         "chat.postMessage",
+    #         channel=channel,
+    #         text="You (" + get_pretty_user(sender) + ") are not registered!\n",
+    #         as_user=True)
+    #     return
     image_files = yy.getImages(image)
+    print image_files
     image_64_list = []
     for im in image_files:
-        image_64_list.append(base64.b64encode(im).decode('ascii'))
+        with open(im, "rb") as f:
+            image_64_list.append(base64.b64encode(f.read()).decode('ascii'))
     error, players = fr.get_players_from_image(image_64_list)
     if error == "ERROR":
         print("did not detect player in picture")
@@ -78,14 +88,13 @@ def handle_kill(image, sender, channel):
             as_user=True)
         return
     #increment the sender's score by how many people they got
-    print score
     score[sender] = score[sender] + len(players)
     if len(players) > 0:
         slack_client.api_call(
             "chat.postMessage",
             channel=channel,
             text="Scored a point!\n" + get_pretty_user(sender)
-             + " : " + score[sender],
+             + " : " + str(score[sender]),
         as_user=True)
         slack_client.api_call(
             "chat.postMessage",
@@ -97,7 +106,7 @@ def handle_kill(image, sender, channel):
             slack_client.api_call(
                 "chat.postMessage",
                 channel=channel,
-                text = get_pretty_user(player) + " : " + score[player],
+                text = get_pretty_user(player) + " : " + str(score[player]),
             as_user=True)
     else:
         slack_client.api_call(
@@ -123,15 +132,18 @@ def parse_slack_output(slack_rtm_output):
                                   None) and "file_share" in output['subtype']:
                         f = output['file']
                         headers = {'Authorization': 'Bearer ' + SLACK_BOT_TOKEN}
-                        file_name = ".tmp-image-file"
-                        with open(file_name, "wb+") as fil:
-                            fil.write(requests.get(f['url_private_download'], headers=headers).content)
+                        image_data = requests.get(f['url_private_download'], headers=headers).content
                         if 'enroll' in output['file'].get('initial_comment', {'comment' : ''})['comment']:
                             ty = 'enroll'
+                            image = image_data
                         else:
+                            file_name = ".tmp-image-file"
+                            with open(file_name, "wb+") as fil:
+                                fil.write(image_data)
                             ty = 'kill'
+                            image = file_name
                         return {
-                            'image': file_name,
+                            'image': image,
                             'channel': output['channel'],
                             'user': output['user'],
                             'type': ty
@@ -167,6 +179,12 @@ if __name__ == "__main__":
         EXAMPLE_COMMAND = "do"
 
         slack_client = SlackClient(SLACK_BOT_TOKEN)
+
+        for user in fr.get_gallery_users():
+            if 'Elizabeth' not in user:
+                score[user] = 0
+
+        print score
 
         READ_WEBSOCKET_DELAY = 1
         if slack_client.rtm_connect():

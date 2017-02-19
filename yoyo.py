@@ -1,13 +1,10 @@
 import subprocess
-import os
+import glob
 
 
 def getImages(image_file):
     subprocess.call("math -script pictester.m " + image_file, shell=True)
-    image_names = subprocess.check_output(['ls', 'tempdir/'])
-    new_names = []
-    for image_name in image_names:
-        new_names.append('tempdir/' + image_name)
+    new_names = glob.glob('./tempdir/*')
     return new_names
 
 

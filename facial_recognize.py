@@ -5,6 +5,7 @@ import subprocess as sp
 #from requests_oauthlib import OAuth1
 enroll_url = "https://api.kairos.com/enroll"
 recognize_url = "https://api.kairos.com/recognize"
+gallery_url = "https://api.kairos.com/gallery/view"
 headers = {
     'Content-Type': 'application/json',
     'app_id': 'f62afb61',
@@ -31,9 +32,10 @@ def enroll_player(image, player):
 def get_players_from_image(image_list):
     players = []
     for image in image_list:
-        player = get_player_from_image(image)
-        if not player == "ERROR":
-            players.append(player)
+        result, rpl = get_player_from_image(image)
+        if result == "OK":
+            for p in rpl:
+                players.append(p)
     #delete temp folder for pics that we made in yoyo
     sp.call(['rm','-r','tempdir'])
     if len(players) == 0:
@@ -61,3 +63,7 @@ def get_player_from_image(image):
             players.append(candidate['subject_id'])
     return ("OK", players)
 
+def get_gallery_users():
+    gallery_json = {'gallery_name': "MyGallery"}
+    r = requests.post(gallery_url, json=gallery_json, headers=headers)
+    return r.json().get('subject_ids', [])
