@@ -30,7 +30,7 @@ def handle_command(parsed):
             response = "User " + get_pretty_user(parsed['user']) + " successfully registered!"
     if 'score' in parsed['type']:
         response = "Score is yet to be implemented"
-        # handle_score(parsed['channel'])
+        handle_score(parsed['channel'])
     slack_client.api_call(
         "chat.postMessage",
         channel=parsed['channel'],
@@ -70,13 +70,13 @@ def handle_kill(image, sender, channel):
             as_user=True)
         return
     #increment the sender's score by how many people they got
-    # score[sender] = score[sender] + len(players)
+    score[sender] = score[sender] + len(players)
     if len(players) > 0:
         slack_client.api_call(
             "chat.postMessage",
             channel=channel,
-            text="Scored a point!\n" + sender,
-            # + " : " + score[sender],
+            text="Scored a point!\n" + get_pretty_user(sender)
+             + " : " + score[sender],
         as_user=True)
         slack_client.api_call(
             "chat.postMessage",
@@ -84,12 +84,11 @@ def handle_kill(image, sender, channel):
             text="Lost a point!\n",
             as_user=True)
         for player in players:  #decrement each player's score who got caught
-            # score[player] -= 1
+            score[player] -= 1
             slack_client.api_call(
                 "chat.postMessage",
                 channel=channel,
-                text = get_pretty_user(player),
-                # text=player + " : " + score[player],
+                text = get_pretty_user(player) + " : " + score[player],
             as_user=True)
     else:
         slack_client.api_call(
