@@ -42,7 +42,6 @@ def handle_command(parsed):
 def handle_score(
         channel,
         ):  #this gets called when a user wants to see the score
-    #doesn't edit score, so doesn't need to return it
 
     sorted_score = sorted(score.items(), key=operator.itemgetter(1))
     strscore = ""
@@ -65,6 +64,13 @@ def handle_registration(image_file, sender):
 
 
 def handle_kill(image, sender, channel):
+    if sender not in score:
+        slack_client.api_call(
+            "chat.postMessage",
+            channel=parsed['channel'],
+            text="Sorry, you (" + get_pretty_user(sender) + ") aren't enrolled yet.",
+            as_user=True)
+        return
     image_files = yy.getImages(image)
     print image_files
     image_64_list = []
@@ -77,7 +83,7 @@ def handle_kill(image, sender, channel):
         slack_client.api_call(
             "chat.postMessage",
             channel=parsed['channel'],
-            text="did not detect player in picture",
+            text="Sorry, couldn't find a player in the picture.",
             as_user=True)
         return
     players = list(set(players))
@@ -120,6 +126,7 @@ def parse_slack_output(slack_rtm_output):
     if output_list and len(output_list) > 0:
         for output in output_list:
             print(output['type'])
+            print(output)
             if output:
                 if "message" in output['type']:
                     if output.get("subtype",
