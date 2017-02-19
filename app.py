@@ -48,9 +48,9 @@ def handle_score(
         as_user=True)  #we will make it look nicer later
 
 def handle_registration(score, image, sender):
-    fr.enroll_player(image, sender)  #need to register in gallery
+    return fr.enroll_player(image, sender)  #need to register in gallery
     # score[sender] = 0  #when you register your score gets initialized to zero
-    return score
+    # return score
 
 
 def handle_kill(score, image, sender, channel):

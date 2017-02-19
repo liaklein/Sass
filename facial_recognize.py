@@ -21,7 +21,7 @@ def enroll_player(image, player):
     r = requests.post(enroll_url, json=json_info, headers=headers).json()
     #do something with r.status_code?
     if r.get('Errors'):
-        response = {'result': {'error': r['Errors']['message']}}
+        response = {'result': {'error': r['Errors'][0]['Message']}}
     else:
         response = {'result': {'success': player}}
     return response
