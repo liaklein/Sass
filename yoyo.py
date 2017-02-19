@@ -1,7 +1,7 @@
 import subprocess
 
-def getImages(image):
-    subprocess.call('math', '-script', 'pictester.m', str(image))
+def getImages(image_file):
+    subprocess.call(['math', '-script', 'pictester.m', str(image_file)])
     image_names = subprocess.check_output(['ls','tempdir/'])
     new_names = []
     for image_name in image_names:
