@@ -19,15 +19,20 @@ def enroll_player(image, player):
     json_info["subject_id"] = player
 
     #send the request
-    r = requests.post(enroll_url, json=json_info, headers=headers)
+    r = requests.post(enroll_url, json=json_info, headers=headers).json()
     #do something with r.status_code?
+    if r.get('Errors'):
+        response = {'result': {'error': r['Errors'][0]['Message']}}
+    else:
+        response = {'result': {'success': player}}
+    return response
 
 
 def get_players_from_image(image_list):
     players = []
     for image in image_list:
         player = get_player_from_image(image)
-        if player not == "ERROR":
+        if not player == "ERROR":
             players.append(player)
     #delete temp folder for pics that we made in yoyo
     sp.call(['rm','-r','tempdir'])
@@ -49,7 +54,10 @@ def get_player_from_image(image):
     response = r.json()
     if "Errors" in response:
         print("there was an error")
-        return "ERROR"
-    #the below line is most likely wrong lol
-    player = response["images"][0]["candidates"][0]["subject_id"]
-    return player
+        return ("ERROR",[])
+    players = []
+    for image in response.get('images', []):
+        for candidate in image.get('candidates', []):
+            players.append(candidate['subject_id'])
+    return ("OK", players)
+

@@ -13,20 +13,24 @@ def get_pretty_user(user_id):
     info = slacker_client.users.info(user_id)
     return info.body['user']['name']
 
-def handle_command(parsed, score):
+def handle_command(parsed):
     """
         Receives commands directed at the bot and determines if they
         are valid commands. If so, then acts on the commands. If not,
         returns back what it needs for clarification.
     """
-    if 'enroll' in parsed['type']:
-        handle_registration(score, parsed['image'], parsed['user'])
-        response = "Congratulations: user " + get_pretty_user(parsed['user']) + " is enrolled!"
     if 'kill' in parsed['type']:
-        handle_kill(score, parsed['image'], get_pretty_user(parsed['user']), parsed['channel'])
+        handle_kill(parsed['image'], get_pretty_user(parsed['user']), parsed['channel'])
+        return;
+    if 'enroll' in parsed['type']:
+        result = handle_registration(parsed['image'], parsed['user'])['result']
+        if result.get('error'):
+            response = "Error: " + result['error']
+        else:
+            response = "User " + get_pretty_user(parsed['user']) + " successfully registered!"
     if 'score' in parsed['type']:
         response = "Score is yet to be implemented"
-        # handle_score(score, parsed['channel'])
+        handle_score(parsed['channel'])
     slack_client.api_call(
         "chat.postMessage",
         channel=parsed['channel'],
@@ -34,29 +38,28 @@ def handle_command(parsed, score):
         as_user=True)
 
 def handle_score(
-        score, channel,
+        channel,
         ):  #this gets called when a user wants to see the score
     #doesn't edit score, so doesn't need to return it
     slack_client.api_call(
         "chat.postMessage",
         channel=channel,
-        text="Score\n",
-        # + str(sorted(score)),
+        text="Score\n"
+         + str(sorted(score)),
         as_user=True)  #we will make it look nicer later
 
-def handle_registration(score, image_file, sender):
+def handle_registration(image_file, sender):
     image_64 = base64.b64encode(image_file).decode('ascii')
-    fr.enroll_player(image64, sender)  #need to register in gallery
-    # score[sender] = 0  #when you register your score gets initialized to zero
-    return score
+    score[sender] = 0  #when you register your score gets initialized to zero
+    return fr.enroll_player(image_64, sender)  #need to register in gallery
 
 
-def handle_kill(score, image, sender, channel):
+def handle_kill(image, sender, channel):
     #get all of the registered players who are in the photo
     image_files = yy.getImages(image)
     image_64_list = []
-    for im in images:
-        image_64_list.append(base64.b64encode(image_file).decode('ascii'))
+    for im in image_files:
+        image_64_list.append(base64.b64encode(im).decode('ascii'))
     error, players = fr.get_players_from_image(image_64_list)
     if error == "ERROR":
         print("did not detect player in picture")
@@ -65,29 +68,34 @@ def handle_kill(score, image, sender, channel):
             channel=parsed['channel'],
             text="did not detect player in picture",
             as_user=True)
-        return score
+        return
     #increment the sender's score by how many people they got
-    # score[sender] = score[sender] + len(players)
-    slack_client.api_call(
-        "chat.postMessage",
-        channel=channel,
-        text="Scored a point!\n" + sender,
-        # + " : " + score[sender],
-        as_user=True)
-    slack_client.api_call(
-        "chat.postMessage",
-        channel=channel,
-        text="Lost a point!\n",
-        as_user=True)
-    for player in players:  #decrement each player's score who got caught
-        # score[player] -= 1
+    score[sender] = score[sender] + len(players)
+    if len(players) > 0:
         slack_client.api_call(
             "chat.postMessage",
             channel=channel,
-            text = get_pretty_user(player),
-            # text=player + " : " + score[player],
+            text="Scored a point!\n" + get_pretty_user(sender)
+             + " : " + score[sender],
+        as_user=True)
+        slack_client.api_call(
+            "chat.postMessage",
+            channel=channel,
+            text="Lost a point!\n",
             as_user=True)
-    return score
+        for player in players:  #decrement each player's score who got caught
+            score[player] -= 1
+            slack_client.api_call(
+                "chat.postMessage",
+                channel=channel,
+                text = get_pretty_user(player) + " : " + score[player],
+            as_user=True)
+    else:
+        slack_client.api_call(
+            "chat.postMessage",
+            channel=channel,
+            text="People were detected, but none of them seem to be players. Try again!\n",
+            as_user=True)
 
 
 def parse_slack_output(slack_rtm_output):
@@ -109,7 +117,6 @@ def parse_slack_output(slack_rtm_output):
                         image_file = cStringIO.StringIO(
                             requests.get(f['url_private_download'], headers=headers).content
                             ).read()
-                        print output
                         if 'enroll' in output['file'].get('initial_comment', {'comment' : ''})['comment']:
                             ty = 'enroll'
                         else:
@@ -158,7 +165,7 @@ if __name__ == "__main__":
             while True:
                 parsed = parse_slack_output(slack_client.rtm_read())
                 if parsed:
-                    score = handle_command(parsed, score)
+                    handle_command(parsed)
                     time.sleep(READ_WEBSOCKET_DELAY)
         else:
             print("Connection failed. Invalid Slack token or bot ID?")
