@@ -59,6 +59,8 @@ def handle_score(
 
 def handle_registration(image_file, sender):
     image_64 = base64.b64encode(image_file).decode('ascii')
+    if score.get(sender) == None:
+        score[sender] = 0
     return fr.enroll_player(image_64, sender)  #need to register in gallery
 
 
@@ -125,7 +127,7 @@ def parse_slack_output(slack_rtm_output):
                         f = output['file']
                         headers = {'Authorization': 'Bearer ' + SLACK_BOT_TOKEN}
                         image_data = requests.get(f['url_private_download'], headers=headers).content
-                        if 'enroll' in output['file'].get('initial_comment', {'comment' : ''})['comment']:
+                        if 'enroll' in output['file']['title'].lower():
                             ty = 'enroll'
                             image = image_data
                         else:
