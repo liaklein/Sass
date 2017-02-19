@@ -2,6 +2,7 @@ import os
 import base64
 import time
 import facial_recognize as fr
+import yoyo as yy
 from slackclient import SlackClient
 from slacker import Slacker
 import requests
@@ -43,15 +44,20 @@ def handle_score(
         # + str(sorted(score)),
         as_user=True)  #we will make it look nicer later
 
-def handle_registration(score, image, sender):
-    fr.enroll_player(image, sender)  #need to register in gallery
+def handle_registration(score, image_file, sender):
+    image_64 = base64.b64encode(image_file).decode('ascii')
+    fr.enroll_player(image64, sender)  #need to register in gallery
     # score[sender] = 0  #when you register your score gets initialized to zero
     return score
 
 
 def handle_kill(score, image, sender, channel):
     #get all of the registered players who are in the photo
-    error, players = fr.get_players_from_image(image)
+    image_files = yy.getImages(image)
+    image_64_list = []
+    for im in images:
+        image_64_list.append(base64.b64encode(image_file).decode('ascii'))
+    error, players = fr.get_players_from_image(image_64_list)
     if error == "ERROR":
         print("did not detect player in picture")
         slack_client.api_call(
@@ -108,9 +114,8 @@ def parse_slack_output(slack_rtm_output):
                             ty = 'enroll'
                         else:
                             ty = 'kill'
-                        image_64 = base64.b64encode(image_file).decode('ascii')
                         return {
-                            'image': str(image_64),
+                            'image': str(image_file), #passing the image file, turning to base64 later
                             'channel': output['channel'],
                             'user': output['user'],
                             'type': ty
