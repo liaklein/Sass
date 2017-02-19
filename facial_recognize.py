@@ -32,7 +32,7 @@ def get_players_from_image(image_list):
     players = []
     for image in image_list:
         player = get_player_from_image(image)
-        if player not == "ERROR":
+        if not player == "ERROR":
             players.append(player)
     #delete temp folder for pics that we made in yoyo
     sp.call(['rm','-r','tempdir'])

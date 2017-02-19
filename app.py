@@ -50,7 +50,7 @@ def handle_score(
 
 def handle_registration(score, image_file, sender):
     image_64 = base64.b64encode(image_file).decode('ascii')
-    return fr.enroll_player(image64, sender)  #need to register in gallery
+    return fr.enroll_player(image_64, sender)  #need to register in gallery
     # score[sender] = 0  #when you register your score gets initialized to zero
     # return score
 
@@ -59,8 +59,8 @@ def handle_kill(score, image, sender, channel):
     #get all of the registered players who are in the photo
     image_files = yy.getImages(image)
     image_64_list = []
-    for im in images:
-        image_64_list.append(base64.b64encode(image_file).decode('ascii'))
+    for im in image_files:
+        image_64_list.append(base64.b64encode(im).decode('ascii'))
     error, players = fr.get_players_from_image(image_64_list)
     if error == "ERROR":
         print("did not detect player in picture")
