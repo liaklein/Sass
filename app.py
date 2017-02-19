@@ -63,14 +63,6 @@ def handle_registration(image_file, sender):
 
 
 def handle_kill(image, sender, channel):
-    #get all of the registered players who are in the photo
-    # if not score.get(sender, False):
-    #     slack_client.api_call(
-    #         "chat.postMessage",
-    #         channel=channel,
-    #         text="You (" + get_pretty_user(sender) + ") are not registered!\n",
-    #         as_user=True)
-    #     return
     image_files = yy.getImages(image)
     print image_files
     image_64_list = []
