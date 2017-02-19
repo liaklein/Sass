@@ -59,7 +59,6 @@ def handle_score(
 
 def handle_registration(image_file, sender):
     image_64 = base64.b64encode(image_file).decode('ascii')
-    score[sender] = 0  #when you register your score gets initialized to zero
     return fr.enroll_player(image_64, sender)  #need to register in gallery
 
 
@@ -87,6 +86,7 @@ def handle_kill(image, sender, channel):
             text="did not detect player in picture",
             as_user=True)
         return
+    players = list(set(players))
     #increment the sender's score by how many people they got
     score[sender] = score[sender] + len(players)
     if len(players) > 0:
